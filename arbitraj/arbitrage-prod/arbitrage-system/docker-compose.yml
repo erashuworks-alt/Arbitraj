@@ -1,0 +1,65 @@
+version: '3.9'
+
+services:
+  redis:
+    image: redis:7
+    restart: always
+
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: arb
+      POSTGRES_PASSWORD: arbpass
+      POSTGRES_DB: arbitrage
+
+  fetcher:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "npm install && node services/fetcher/index.js"
+
+  event-hub:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "npm install && node services/event-hub/index.js"
+
+  sniper:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "npm install && node services/sniper/index.js"
+
+  risk-engine:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "npm install && node services/risk-engine/index.js"
+
+  execution:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "npm install && node services/execution/index.js"
+
+  worker:
+    image: node:18
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "npm install && node services/worker/index.js"
+
+  ui:
+    image: node:18
+    working_dir: /app/ui
+    volumes:
+      - .:/app
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "3000:3000"

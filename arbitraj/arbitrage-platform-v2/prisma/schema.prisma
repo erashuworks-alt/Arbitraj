@@ -1,0 +1,43 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Item {
+  id            Int      @id @default(autoincrement())
+  item_name     String
+  steam_price   Float
+  csfloat_price Float
+  volume        Int
+  updated_at    DateTime @updatedAt
+
+  @@map("items")
+}
+
+model ProfitableItem {
+  id             Int      @id @default(autoincrement())
+  item_name      String
+  buy_from       String
+  sell_to        String
+  buy_price      Float
+  sell_price     Float
+  net_profit     Float
+  profit_percent Float
+  created_at     DateTime @default(now())
+
+  @@map("profitable_items")
+}
+
+model User {
+  id                       Int     @id @default(autoincrement())
+  email                    String  @unique
+  password_hash            String
+  role                     String  @default("user")
+  notification_preferences String?
+
+  @@map("users")
+}

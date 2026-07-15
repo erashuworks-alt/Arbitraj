@@ -1,0 +1,6 @@
+{
+  "name": "ui",
+  "scripts": {
+    "dev": "npx next dev"
+  }
+}

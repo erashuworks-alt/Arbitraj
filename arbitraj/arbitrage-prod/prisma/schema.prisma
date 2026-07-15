@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  name               String?
+  email              String?   @unique
+  emailVerified      DateTime?
+  image              String?
+  password_hash      String?
+  role               String    @default("user")
+  notification_prefs String?
+  resetToken         String?   @unique
+  resetTokenExpires  DateTime?
+  status             String    @default("ACTIVE") // ACTIVE, PASSIVE
+  createdAt          DateTime  @default(now())
+  accounts           Account[]
+  sessions           Session[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Partner {
+  id        String   @id @default(cuid())
+  name      String
+  logo      String
+  link      String
+  active    Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Item {
+  id                 Int       @id @default(autoincrement())
+  item_name          String    @unique
+  steam_price        Float
+  csfloat_price      Float
+  prev_steam_price   Float?
+  prev_csfloat_price Float?
+  volume             Int
+  prev_volume        Int?
+  listing_count      Int       @default(0)
+  prev_listing_count Int?
+  opportunity_count  Int       @default(0)
+  competition_score  Float     @default(0)
+  last_api_timestamp DateTime?
+  fetch_count        Int       @default(0)
+  comp_update_count  Int       @default(0)
+  profit_started_at  DateTime?
+  sell_velocity      Float     @default(0)
+  demand_intensity   Float     @default(0)
+  updated_at         DateTime  @updatedAt
+
+  @@map("items")
+}
+
+model ProfitableItem {
+  id                    Int      @id @default(autoincrement())
+  item_name             String
+  buy_from              String
+  sell_to               String
+  buy_price             Float
+  sell_price            Float
+  net_profit            Float
+  profit_percent        Float
+  liquidity_score       Float    @default(0)
+  intelligence_score    Float    @default(0)
+  saturation_score      Float    @default(0)
+  execution_probability Float    @default(0)
+  slippage_risk         Float    @default(0)
+  market_stability      Float    @default(0)
+  execution_score       Float    @default(0)
+  status                String   @default("ACTIVE")
+  review_score          Float    @default(0)
+  is_sniper             Boolean  @default(false)
+  created_at            DateTime @default(now())
+
+  @@map("profitable_items")
+}
+
+model OpportunityLock {
+  id         String   @id
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  @@map("opportunity_locks")
+}
+
+model SnapshotVersion {
+  id         Int      @id @default(autoincrement())
+  version    Int      @default(0)
+  status     String   @default("PENDING")
+  updated_at DateTime @default(now())
+
+  @@map("snapshot_versions")
+}
+
+model MarketSnapshot {
+  id         Int      @id @default(autoincrement())
+  version    Int
+  partition  Int      @default(0)
+  item_name  String
+  price      Float
+  platform   String
+  created_at DateTime @default(now())
+
+  @@index([version])
+  @@map("market_snapshots")
+}
+
+model StreamingEvent {
+  id          String   @id @default(uuid())
+  type        String
+  partition   Int      @default(0)
+  priority    String   @default("MEDIUM")
+  score       Int      @default(0)
+  payload     String
+  retry_count Int      @default(0)
+  status      String   @default("PENDING")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("streaming_events")
+}
+
+model LoadPattern {
+  id         Int      @id @default(autoincrement())
+  hour       Int      @unique
+  avg_load   Float    @default(0)
+  peak_load  Float    @default(0)
+  updated_at DateTime @default(now())
+
+  @@map("load_patterns")
+}
+
+model RetryPerformance {
+  id            Int      @id @default(autoincrement())
+  delay_range   Int      @unique
+  success_count Int      @default(0)
+  failure_count Int      @default(0)
+  updated_at    DateTime @default(now())
+
+  @@map("retry_performance")
+}
+
+model ExecutionRecord {
+  id              String   @id @default(uuid())
+  idempotency_key String   @unique
+  item_name       String
+  buy_price       Float
+  sell_price      Float
+  status          String   @default("PENDING")
+  tx_hash         String?
+  created_at      DateTime @default(now())
+
+  @@map("execution_records")
+}
+
+model CMSContent {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  updated_at  DateTime @updatedAt
+
+  @@map("cms_content")
+}
+
+model AnalyticsLog {
+  id         String   @id @default(cuid())
+  ip         String
+  user_agent String
+  page       String
+  timestamp  DateTime @default(now())
+
+  @@map("analytics_logs")
+}
+
+model SessionLog {
+  id          String   @id @default(cuid())
+  ip          String
+  device_type String
+  browser     String
+  start_time  DateTime @default(now())
+
+  @@map("session_logs")
+}
+model SupportTicket {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  message    String
+  reply      String?
+  status     String   @default("OPEN") // OPEN, CLOSED
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("support_tickets")
+}
